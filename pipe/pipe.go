@@ -5,6 +5,7 @@ import (
 	"github.com/faiface/pixel"
 	"image"
 	_ "image/png"
+	"math/rand"
 	"os"
 )
 
@@ -21,6 +22,10 @@ func loadPicture(path string) (pixel.Picture, error) {
 	return pixel.PictureDataFromImage(img), nil
 }
 
+const sheight = 512.0
+const swidth = 672.0
+const space = 70.0
+
 var velocity = pixel.V(-200, 0)
 
 var sheet pixel.Picture
@@ -35,11 +40,10 @@ func init() {
 	sheet, _ = loadPicture("pipe.png")
 }
 
-func New(height float64, bot bool) Pipe {
-	if bot {
-		return Pipe{pixel.NewSprite(sheet, sheet.Bounds()), pixel.R(1024, height-sheet.Bounds().H(), 1024+sheet.Bounds().W(), height), bot}
-	}
-	return Pipe{pixel.NewSprite(sheet, sheet.Bounds()), pixel.R(1024, 768-height, 1024+sheet.Bounds().W(), 768-height+sheet.Bounds().H()), bot}
+func New() (Pipe, Pipe) {
+	heightBot, heightTop := CalculateNewPipe()
+	return Pipe{pixel.NewSprite(sheet, sheet.Bounds()), pixel.R(swidth, heightBot-sheet.Bounds().H(), swidth+sheet.Bounds().W(), heightBot), true},
+		Pipe{pixel.NewSprite(sheet, sheet.Bounds()), pixel.R(swidth, sheight-heightTop, swidth+sheet.Bounds().W(), sheight-heightTop+sheet.Bounds().H()), false}
 }
 
 func (p *Pipe) Update(dt float64) {
@@ -55,9 +59,16 @@ func (p *Pipe) Draw(t pixel.Target) {
 }
 
 func (p Pipe) Offscreen() bool {
-	return p.body.Min.X < 0
+	return p.body.Max.X < 0
 }
 
 func (p Pipe) GetBody() pixel.Rect {
 	return p.body
+}
+
+func CalculateNewPipe() (float64, float64) {
+	start := float64(rand.Intn(sheight - 400))
+	heightBot := 200 + start
+	heightTop := sheight - heightBot - space
+	return heightBot, heightTop
 }
