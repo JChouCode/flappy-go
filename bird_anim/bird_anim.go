@@ -2,7 +2,7 @@ package bird_anim
 
 import (
 	"encoding/json"
-	"fmt"
+	// "fmt"
 	"github.com/JChouCode/flappygo/bird"
 	"github.com/faiface/pixel"
 	"image"
@@ -76,26 +76,46 @@ func loadAnimationBird(imgPath string) {
 	// return nil
 }
 
+const rotSpeed = 4
+
 var anims []pixel.Picture
 var counter = 0.0
 var rate = 1.0 / 10
 
 type BirdAnim struct {
-	sprite *pixel.Sprite
-	sheet  pixel.Picture
-	anims  []pixel.Picture
+	sprite   *pixel.Sprite
+	sheet    pixel.Picture
+	anims    []pixel.Picture
+	rotation float64
 }
 
 func New() BirdAnim {
-	loadAnimationBird("grumpybird/fly1.png")
-	loadAnimationBird("grumpybird/fly2.png")
-	loadAnimationBird("grumpybird/fly3.png")
-	loadAnimationBird("grumpybird/fly4.png")
-	fmt.Println(anims)
-	return BirdAnim{pixel.NewSprite(nil, pixel.Rect{}), nil, anims}
+	// loadAnimationBird("grumpybird/fly1.png")
+	// loadAnimationBird("grumpybird/fly2.png")
+	// loadAnimationBird("grumpybird/fly3.png")
+	// loadAnimationBird("grumpybird/fly4.png")
+	loadAnimationBird("yellowbird-midflap.png")
+	loadAnimationBird("yellowbird-upflap.png")
+	// loadAnimationBird("yellowbird-midflap.png")
+	loadAnimationBird("yellowbird-downflap.png")
+	// fmt.Println(anims)
+	return BirdAnim{pixel.NewSprite(nil, pixel.Rect{}), nil, anims, 0}
 }
 
 func (ba *BirdAnim) Update(b bird.Bird, dt float64) {
+	if b.Falling() {
+		ba.rotation -= rotSpeed * dt
+		if ba.rotation < toRad(-90) {
+			ba.rotation = toRad(-90)
+		}
+	} else {
+		ba.rotation = toRad(45)
+	}
+	if b.StopAnim() {
+		ba.sheet = ba.anims[0]
+		counter = 0
+
+	}
 	counter += dt
 	i := int(math.Floor(counter / rate))
 	ba.sheet = ba.anims[i%len(ba.anims)]
@@ -103,9 +123,15 @@ func (ba *BirdAnim) Update(b bird.Bird, dt float64) {
 
 func (ba *BirdAnim) Draw(t pixel.Target, b bird.Bird) {
 	ba.sprite.Set(ba.sheet, ba.sheet.Bounds())
-	ba.sprite.Draw(t, pixel.IM.ScaledXY(pixel.ZV, pixel.V(
-		b.GetBody().W()/ba.sprite.Picture().Bounds().W(),
-		b.GetBody().H()/ba.sprite.Picture().Bounds().H(),
-	)).
+	ba.sprite.Draw(t, pixel.IM.Rotated(pixel.ZV, ba.rotation).
+		// 	ScaledXY(pixel.ZV, pixel.V(
+		// 	b.GetBody().W()/ba.sprite.Picture().Bounds().W(),
+		// 	b.GetBody().H()/ba.sprite.Picture().Bounds().H(),
+		// ))
+		// .
 		Moved(b.GetBody().Center()))
+}
+
+func toRad(deg float64) float64 {
+	return deg * math.Pi / 180
 }

@@ -5,10 +5,15 @@ import (
 	_ "image/png"
 )
 
-const gravity = 6
+const sheight = 512.0
+const swidth = 672.0
+const bheight = 24.0
+const bwidth = 24.0
+
+const gravity = 10
 const airRes = 0.99
 
-const lift = 300.0
+const lift = 250.0
 
 type Bird struct {
 	body pixel.Rect
@@ -16,12 +21,17 @@ type Bird struct {
 }
 
 func New() Bird {
-	return Bird{pixel.R(500, 500, 570, 560), pixel.V(0, 0)}
+	minY := sheight/2 - bheight/2
+	minX := swidth * 0.4
+	return Bird{pixel.R(minX, minY, minX+bwidth, minX+bheight), pixel.V(0, 0)}
 }
 
 func (b *Bird) Update(dt float64) {
 	b.vel.Y -= gravity
 	b.vel.Y *= airRes
+	if b.body.Center().Y <= 112 && b.vel.Y < 0 {
+		return
+	}
 	b.body = b.body.Moved(b.vel.Scaled(dt))
 }
 
@@ -42,6 +52,16 @@ func GetLift() float64 {
 }
 
 func (b *Bird) Reset() {
-	b.body = pixel.R(500, 500, 570, 560)
+	minY := sheight/2 - bheight/2
+	minX := swidth * 0.4
+	b.body = pixel.R(minX, minY, minX+bwidth, minX+bheight)
 	b.vel = pixel.V(0, 0)
+}
+
+func (b Bird) Falling() bool {
+	return b.vel.Y < 0
+}
+
+func (b Bird) StopAnim() bool {
+	return b.vel.Y < 6
 }
