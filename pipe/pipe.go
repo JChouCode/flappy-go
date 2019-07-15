@@ -34,6 +34,7 @@ type Pipe struct {
 	sprite *pixel.Sprite
 	body   pixel.Rect
 	bot    bool
+	passed bool
 }
 
 func init() {
@@ -42,12 +43,24 @@ func init() {
 
 func New() (Pipe, Pipe) {
 	heightBot, heightTop := CalculateNewPipe()
-	return Pipe{pixel.NewSprite(sheet, sheet.Bounds()), pixel.R(swidth, heightBot-sheet.Bounds().H(), swidth+sheet.Bounds().W(), heightBot), true},
-		Pipe{pixel.NewSprite(sheet, sheet.Bounds()), pixel.R(swidth, sheight-heightTop, swidth+sheet.Bounds().W(), sheight-heightTop+sheet.Bounds().H()), false}
+	return Pipe{pixel.NewSprite(sheet, sheet.Bounds()), pixel.R(swidth, heightBot-sheet.Bounds().H(), swidth+sheet.Bounds().W(), heightBot), true, false},
+		Pipe{pixel.NewSprite(sheet, sheet.Bounds()), pixel.R(swidth, sheight-heightTop, swidth+sheet.Bounds().W(), sheight-heightTop+sheet.Bounds().H()), false, false}
 }
 
 func (p *Pipe) Update(dt float64) {
 	p.body = p.body.Moved(velocity.Scaled(dt))
+}
+
+func (p *Pipe) Passed() {
+	p.passed = true
+}
+
+func (p Pipe) GetPassed() bool {
+	return p.passed
+}
+
+func (p Pipe) GetBot() bool {
+	return p.bot
 }
 
 func (p *Pipe) Draw(t pixel.Target) {
@@ -67,7 +80,7 @@ func (p Pipe) GetBody() pixel.Rect {
 }
 
 func CalculateNewPipe() (float64, float64) {
-	start := float64(rand.Intn(sheight - 400))
+	start := float64(rand.Intn(sheight - 340))
 	heightBot := 200 + start
 	heightTop := sheight - heightBot - space
 	return heightBot, heightTop

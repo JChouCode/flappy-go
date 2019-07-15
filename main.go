@@ -4,6 +4,7 @@ import (
 	// "fmt"
 	"github.com/JChouCode/flappygo/bird"
 	"github.com/JChouCode/flappygo/bird_anim"
+	"github.com/JChouCode/flappygo/font"
 	"github.com/JChouCode/flappygo/pipe"
 	"github.com/JChouCode/flappygo/scrollable"
 	"github.com/faiface/pixel"
@@ -20,19 +21,14 @@ const sheight = 512.0
 const swidth = 672.0
 
 func collide(player bird.Bird, pipe pipe.Pipe) bool {
-	// if player.GetBody().Min.X >= pipe.GetBody().Min.X &&
-	// 	player.GetBody().Max.X <= pipe.GetBody().Max.X {
-	// 	fmt.Println("collide x")
-	// }
-	// if player.GetBody().Min.Y >= pipe.GetBody().Min.Y &&
-	// 	player.GetBody().Max.Y <= pipe.GetBody().Max.Y {
-	// 	fmt.Println("collide y")
-	// }
 	return swidth*0.4+player.GetBody().W() >= pipe.GetBody().Min.X &&
 		swidth*0.4+player.GetBody().W() <= pipe.GetBody().Max.X &&
 		player.GetBody().Min.Y >= pipe.GetBody().Min.Y-20 &&
 		player.GetBody().Max.Y <= pipe.GetBody().Max.Y+20
-	// return false
+}
+
+func checkPassed(player bird.Bird, pipe pipe.Pipe) bool {
+	return swidth*0.4+player.GetBody().W()/2 >= pipe.GetBody().Center().X
 }
 
 //Initialize window
@@ -46,7 +42,6 @@ func initWindow(t string, w float64, h float64) *pixelgl.Window {
 	if err != nil {
 		panic(err)
 	}
-	// win.SetSmooth(true)
 	return win
 }
 
@@ -55,6 +50,7 @@ func run() {
 
 	player := bird.New()
 	anim := bird_anim.New()
+	score := 0
 
 	var pipes []pipe.Pipe
 	pipeBot, pipeTop := pipe.New()
@@ -107,6 +103,14 @@ func run() {
 			(&bases[i]).Update(dt)
 		}
 
+		// Update score
+		for i, pipe := range pipes {
+			if !pipe.GetBot() && !pipe.GetPassed() && checkPassed(player, pipe) {
+				(&pipes[i]).Passed()
+				score++
+			}
+		}
+
 		// Remove offscreen pipes
 		k := 0
 		for _, pipe := range pipes {
@@ -130,6 +134,7 @@ func run() {
 		for _, element := range pipes {
 			if collide(player, element) {
 				player.Reset()
+				score = 0
 				pipes = nil
 			}
 		}
@@ -144,6 +149,8 @@ func run() {
 		for _, b := range bases {
 			b.Draw(win)
 		}
+
+		font.DrawScore(win, score)
 
 		//Debug
 		// fmt.Fprintln(basicTxt, player.GetBody())
