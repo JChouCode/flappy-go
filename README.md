@@ -8,7 +8,7 @@ $ go run main.go
 ```
 ## Controls
 
-SPACE - jump
-q - quit
+SPACE - jump\
+Q - quit
 
 
